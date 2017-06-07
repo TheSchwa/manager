@@ -5,7 +5,7 @@ import { Card, CardHeader } from 'linode-components/cards';
 import {
   FormGroup, Form, SubmitButton,
 } from 'linode-components/forms';
-import { PlanStyle, planName } from '~/linodes/components/PlanStyle';
+import { planName } from '~/linodes/components/PlanStyle';
 
 import { setSource } from '~/actions/source';
 import { setError } from '~/actions/errors';
