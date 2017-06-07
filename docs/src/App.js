@@ -26,6 +26,9 @@ import {
 import {
   Python,
   PythonIntroduction,
+  Curl,
+  CreateLinode,
+  TestingWithCurl,
 } from './components/guides';
 
 import {
@@ -34,6 +37,9 @@ import {
 } from '~/RoutesGenerator';
 
 import { default as api } from '~/api';
+
+import { API_VERSION } from '~/constants';
+
 
 ReactGA.initialize(GA_ID); // eslint-disable-line no-undef
 function logPageView() {
@@ -76,15 +82,19 @@ export function init() {
     >
       <Route path="/" component={Layout} endpoints={api.endpoints}>
         <Route component={IndexLayout}>
-          <IndexRedirect to="/introduction" />
-          <Redirect from="/reference" to="/introduction" />
-          <Route path="/introduction" component={Introduction} />
-          <Route path="/access" component={Access} />
-          <Route path="/pagination" component={Pagination} />
-          <Route path="/filtering" component={Filtering} />
-          <Route path="/errors" component={Errors} />
-          <Route path="/guides/python" component={Python} />
-          <Route path="/guides/python/introduction" component={PythonIntroduction} />
+          <IndexRedirect to={`/${API_VERSION}/introduction`} />
+          <Redirect from='/reference' to={`/${API_VERSION}/introduction`} />
+          <Redirect from={`/${API_VERSION}/reference`} to={`/${API_VERSION}/introduction`} />
+          <Route path={`/${API_VERSION}/introduction`} component={Introduction} />
+          <Route path={`/${API_VERSION}/access`} component={Access} />
+          <Route path={`/${API_VERSION}/pagination`} component={Pagination} />
+          <Route path={`/${API_VERSION}/filtering`} component={Filtering} />
+          <Route path={`/${API_VERSION}/errors`} component={Errors} />
+          <Route path={`/${API_VERSION}/guides/python`} component={Python} />
+          <Route path={`/${API_VERSION}/guides/python/introduction`} component={PythonIntroduction} />
+          <Route path={`/${API_VERSION}/guides/curl`} component={Curl} />
+          <Route path={`/${API_VERSION}/guides/curl/creating-a-linode`} component={CreateLinode} />
+          <Route path={`/${API_VERSION}/guides/curl/testing-with-curl`} component={TestingWithCurl} />
           {api.endpoints.map(function(endpoint, index) {
             return generateIndexRoute({ key: index, endpoint: endpoint });
           })}
