@@ -5,6 +5,7 @@ import { Card, CardHeader } from 'linode-components/cards';
 import {
   FormGroup, Form, SubmitButton,
 } from 'linode-components/forms';
+import { PlanStyle, planName } from '~/linodes/components/PlanStyle';
 
 import { setSource } from '~/actions/source';
 import { setError } from '~/actions/errors';
@@ -56,9 +57,10 @@ export class ResizePage extends Component {
   render() {
     const { types } = this.props;
     const { type, current, errors, loading } = this.state;
+    const curStr = planName(types.types[current].label);
 
     return (
-      <Card header={<CardHeader title="Resize" />}>
+      <Card header={<CardHeader title={`Resize - ${curStr}`} />}>
         <Form onSubmit={this.onSubmit}>
           <FormGroup>
             <Plan

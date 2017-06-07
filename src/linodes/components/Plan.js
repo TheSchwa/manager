@@ -65,7 +65,6 @@ export default class Plan extends Component {
           <div className="title">
             <PlanStyle
               plan={plan}
-              current={plan.id === current}
             />
           </div>
         </header>
