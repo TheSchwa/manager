@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { Card, CardHeader } from 'linode-components/cards';
 import {
-  FormGroup, Form, SubmitButton,
+  FormGroup, Form, SubmitButton, Input
 } from 'linode-components/forms';
 import { planName } from '~/linodes/components/PlanStyle';
 
@@ -60,8 +60,14 @@ export class ResizePage extends Component {
     const curStr = planName(types.types[current].label);
 
     return (
-      <Card header={<CardHeader title={`Resize - ${curStr}`} />}>
+      <Card header={<CardHeader title='Resize' />}>
         <Form onSubmit={this.onSubmit}>
+          <FormGroup className="row">
+            <label className="col-sm-3 col-form-label">Current Plan</label>
+            <div className="col-sm-9">
+              <Input disabled value={curStr} />
+            </div>
+          </FormGroup>
           <FormGroup>
             <Plan
               types={types.types}
