@@ -1,13 +1,15 @@
+import _ from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import { Card, CardHeader } from 'linode-components/cards';
 import {
+  Input,
   FormGroup,
   Form,
   FormSummary,
+  Radio,
   SubmitButton,
-  Input,
 } from 'linode-components/forms';
 
 import { setSource } from '~/actions/source';
@@ -52,32 +54,74 @@ export class ResizePage extends Component {
     ]));
   }
 
+  renderTypes() {
+    const groups = _.groupBy(Object.values(this.props.types.types), (t) =>
+      t.class === 'nanode' ? 'standard' : t.class);
+
+    const renderGroup = (group) => _.sortBy(group, 'hourly_price').map((type) => (
+      <div key={type.id}>
+        <Radio
+          label={planName(type.label)}
+          checked={this.state.type === type.id}
+          onChange={() => this.setState({ type: type.id })}
+        />
+      </div>
+    ));
+
+    return (
+      <div>
+        <section>
+          <radiogroup>
+            <strong>Standard</strong>
+            {renderGroup(groups.standard)}
+          </radiogroup>
+        </section>
+        <radiogroup>
+          <strong>High Memory</strong>
+          {renderGroup(groups.highmem)}
+        </radiogroup>
+      </div>
+    );
+  }
+
   render() {
     const { types, linode: { type: { id: currentType } } } = this.props;
     const { type, errors, loading } = this.state;
 
+    const currentPlan = types.types[currentType];
+
     return (
       <Card header={<CardHeader title="Resize" />}>
         <Form onSubmit={this.onSubmit}>
+          <p>
+            You will experience downtime while your Linode is shut down, migrated, and resized.
+            We estimate it will take 18 minutes to migrated your Linode, but that may vary based on
+            host and network load.
+          </p>
+          <p>
+            The resized Linode will be billed at the hourly rate of the new Linode plan going forward.
+          </p>
           <FormGroup className="row">
             <label className="col-sm-3 col-form-label">Current Plan</label>
             <div className="col-sm-9">
-              <Input disabled value={planName(types.types[currentType].label)} />
+              <Input
+                disabled
+                value={currentPlan ? planName(currentPlan.label) : 'Unknown'}
+              />
             </div>
           </FormGroup>
-          <FormGroup>
-            <Plan
-              types={types.types}
-              selected={type}
-              onServiceSelected={type => this.setState({ type })}
-            />
+          <FormGroup className="row">
+            <label className="col-sm-3 col-form-label">New Plan</label>
+            <div className="col-sm-9">{this.renderTypes()}</div>
           </FormGroup>
-          <FormGroup>
-            <SubmitButton
-              disabled={loading}
-              disabledChildren="Resizing"
-            >Resize</SubmitButton>
-            <FormSummary errors={errors} success="Linode is being resized." />
+          <FormGroup className="row">
+            <div className="offset-sm-3 col-sm-9">
+              <SubmitButton
+                disabled={loading}
+                disabledChildren="Resizing"
+              >Resize</SubmitButton>
+              <FormSummary errors={errors} success="Linode is being resized." />
+            </div>
           </FormGroup>
         </Form>
       </Card>

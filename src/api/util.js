@@ -133,7 +133,7 @@ export function createHeaderFilter(filter) {
 
 export function transform(objects, options = {}) {
   const {
-    filterBy,
+    filterBy = {},
     filterOn = 'label',
     sortBy = o => moment(o.created),
     groupOn = 'group',
