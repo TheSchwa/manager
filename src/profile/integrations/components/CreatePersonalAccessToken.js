@@ -16,16 +16,24 @@ import { showModal } from '~/actions/modal';
 import { tokens } from '~/api';
 import { OAUTH_SUBSCOPES, OAUTH_SCOPES } from '~/constants';
 import { dispatchOrStoreErrors } from '~/api/util';
+import { EmitEvent } from 'linode-components/utils';
 
+import { formatScope } from '../utilities';
 import SelectExpiration from '../../components/SelectExpiration';
 
 
 export function renderSecret(label, verb, secret, close) {
-  return showModal(
-    [...label.split(' '), verb].map(_.capitalize).join(' '),
+  const title = [...label.split(' '), verb].map(_.capitalize).join(' ');
+  return showModal(title,
     <ConfirmModalBody
-      onOk={close}
-      onCancel={close}
+      onOk={() => {
+        EmitEvent('modal:submit', 'Modal', 'I understand', title);
+        close();
+      }}
+      onCancel={() => {
+        EmitEvent('modal:submit', 'Modal', 'cancel', title);
+        close();
+      }}
       buttonText="I understand"
     >
       <div>
@@ -57,7 +65,7 @@ export default class CreatePersonalAccessToken extends Component {
   onChange = ({ target: { name, value } }) => this.setState({ [name]: value })
 
   onSubmit = () => {
-    const { dispatch } = this.props;
+    const { dispatch, title } = this.props;
     const { label, expiry } = this.state;
 
     const scopes = OAUTH_SCOPES.reduce((scopes, scope) => {
@@ -67,10 +75,11 @@ export default class CreatePersonalAccessToken extends Component {
       }
 
       return [...scopes, `${scope}:${level}`];
-    }, []).join(',') || undefined;
+    }, []).join(',') || ''; // '' allows no scopes. undefined copies current scopes.
 
     return dispatch(dispatchOrStoreErrors.call(this, [
       () => tokens.post({ label, scopes, expiry: SelectExpiration.map(expiry) }),
+      () => { EmitEvent('modal:submit', 'Modal', 'create', title); },
       ({ token }) => renderSecret(
         'personal access token', 'created', token, this.props.close),
     ]));
@@ -80,7 +89,7 @@ export default class CreatePersonalAccessToken extends Component {
     return (
       <ModalFormGroup
         id={scope}
-        label={_.capitalize(scope)}
+        label={formatScope(scope)}
         apiKey={scope}
         errors={this.state.errors}
         key={scope}
@@ -100,7 +109,7 @@ export default class CreatePersonalAccessToken extends Component {
   }
 
   render() {
-    const { close } = this.props;
+    const { close, title } = this.props;
     const { errors, label, expiry, loading } = this.state;
 
     return (
@@ -129,7 +138,12 @@ export default class CreatePersonalAccessToken extends Component {
         </small></p>
         {OAUTH_SCOPES.map(this.renderScopeFormGroup)}
         <div className="Modal-footer">
-          <CancelButton onClick={close} />
+          <CancelButton
+            onClick={() => {
+              EmitEvent('modal:cancel', 'Modal', 'cancel', title);
+              close();
+            }}
+          />
           <SubmitButton
             disabled={loading}
             disabledChildren="Creating"
@@ -143,5 +157,6 @@ export default class CreatePersonalAccessToken extends Component {
 
 CreatePersonalAccessToken.propTypes = {
   dispatch: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
   close: PropTypes.func.isRequired,
 };

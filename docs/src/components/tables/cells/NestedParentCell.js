@@ -2,18 +2,20 @@ import React from 'react';
 import { PropTypes } from 'prop-types';
 
 
-export default function FieldCell(props) {
+export default function NestedParentCell(props) {
   const { record } = props;
 
   return (
     <td className="TableCell FieldCell">
+      <i className={`fa fa-caret-${record.selected ? 'down' : 'right'}`} />
       {record.name}
     </td>
   );
 }
 
-FieldCell.propTypes = {
+NestedParentCell.propTypes = {
   record: PropTypes.shape({
     name: PropTypes.string,
+    selected: PropTypes.bool,
   }),
 };

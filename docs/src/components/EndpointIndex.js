@@ -7,7 +7,7 @@ import { LinkCell } from 'linode-components/tables/cells';
 
 export default function EndpointIndex(props) {
   const { route } = props;
-  const { crumbs, endpoint } = route;
+  const { crumbs, endpointIndex } = route;
 
   return (
     <div className="EndpointIndex">
@@ -15,14 +15,14 @@ export default function EndpointIndex(props) {
         <div className="EndpointIndex-breadcrumbsContainer">
           <Breadcrumbs crumbs={crumbs} />
         </div>
-        <h2>{endpoint.name}</h2>
-        <p>{endpoint.description}</p>
+        <h1>{endpointIndex.name}</h1>
+        {!endpointIndex.description ? null : <p>{endpointIndex.description}</p>}
       </div>
       <div>
-        {endpoint.endpoints.map(function(endpointSection) {
+        {endpointIndex.groups.map(function(group) {
           return (
             <div className="EndpointIndex-group">
-              <h3>{endpointSection.name}</h3>
+              {group.label === 'default' ? null : <h3>{group.label}</h3>}
               <Table
                 className="Table--secondary"
                 columns={[
@@ -31,13 +31,13 @@ export default function EndpointIndex(props) {
                     textKey: 'path',
                     label: 'Endpoint',
                     headerClassName: 'EndpointColumn',
-                    hrefFn: function(childEndpoint) {
-                      return childEndpoint.routePath;
+                    hrefFn: function(endpoint) {
+                      return endpoint.routePath;
                     }
                   },
                   { label: 'Description', dataKey: 'description' },
                 ]}
-                data={endpointSection.endpoints}
+                data={group.endpoints}
                 noDataMessage="No endpoints documented."
               />
             </div>

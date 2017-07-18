@@ -25,7 +25,7 @@ import {
 } from '~/RoutesGenerator';
 
 import { default as api } from '~/api';
-import { python } from '~/data/python';
+import { default as python } from '~/python';
 
 const pythonDataTitles = Object.values(python.pythonObjects).map(function(pythonObject) {
   return {
@@ -43,6 +43,44 @@ const pythonAPITitles = pythonDataTitles.filter(function(pythonData) {
 });
 
 import { API_VERSION } from '~/constants';
+
+
+import {
+  TestingWithCurl,
+  CreateLinode
+} from './getting_started/guides/curl';
+import {
+  PythonIntroduction,
+  BasicSetup,
+  CoreConcepts,
+  OAuthWorkflow
+} from './getting_started/guides/python';
+
+const guidesRoutePath = `/${API_VERSION}/guides`;
+const guideCrumbs = [{ groupLabel: 'Getting Started', label: '/guides', to: guidesRoutePath }];
+const guides = [
+  { routePath: `${guidesRoutePath}/curl/creating-a-linode`, component: CreateLinode, crumbs: guideCrumbs },
+  { routePath: `${guidesRoutePath}/curl/testing-with-curl`, component: TestingWithCurl, crumbs: guideCrumbs },
+  { routePath: `${guidesRoutePath}/python/getting-started`, component: PythonIntroduction, crumbs: guideCrumbs },
+  { routePath: `${guidesRoutePath}/python/oauth-workflow`, component: OAuthWorkflow, crumbs: guideCrumbs },
+  { routePath: `${guidesRoutePath}/python/core-concepts`, component: CoreConcepts, crumbs: guideCrumbs },
+];
+
+// only used for active nav state
+const childParentMap = {};
+api.indices.forEach(function(endpointIndex) {
+  endpointIndex.groups.forEach(function(group) {
+    group.endpoints.forEach(function(child) {
+      childParentMap[child.routePath] = endpointIndex.routePath;
+    });
+  });
+});
+[].concat(pythonClientObjectTitles).concat(pythonAPITitles).forEach(function(endpoint) {
+  childParentMap[endpoint.href] = `/${API_VERSION}/libraries/python`;
+});
+guides.forEach(function(endpoint) {
+  childParentMap[endpoint.routePath] = guidesRoutePath;
+});
 
 
 ReactGA.initialize(GA_ID); // eslint-disable-line no-undef
@@ -71,9 +109,31 @@ function hashLinkScroll() {
   }
 }
 
+window.setTitle = function(newTitle) {
+  const title = document.querySelector('title');
+  title.textContent = 'Linode API Documentation';
+
+  if (newTitle) {
+    title.textContent = `${newTitle} | ${title.textContent}`;
+  }
+};
+
+
+function updateTitle() {
+  const h1 = document.querySelector('h1');
+  if (h1) {
+    window.setTitle(h1.textContent);
+  } else {
+    // If the page is missing h1, we should fill it in. But it's probably better to reset
+    // the title than to leave it as the last page.
+    window.setTitle();
+  }
+}
+
 function onRouterUpdate() {
   logPageView();
   hashLinkScroll();
+  updateTitle();
 }
 
 export function init() {
@@ -83,19 +143,19 @@ export function init() {
       history={browserHistory}
       onUpdate={onRouterUpdate}
     >
-      <Route path="/" component={Layout} endpoints={api.endpoints}>
+      <Route path="/" component={Layout} indices={api.indices} childParentMap={childParentMap}>
         <Route component={IndexLayout}>
           <IndexRedirect to={`/${API_VERSION}`} />
           <Redirect from='/reference' to={`/${API_VERSION}/`} />
           <Route path={`/${API_VERSION}`}>
-            {GettingStartedRoutes}
+            {GettingStartedRoutes(guides, guideCrumbs)}
             <Route path="libraries/python" component={PythonLibrary} pythonDataObjects={{pythonDataTitles, pythonClientObjectTitles, pythonAPITitles}} />
-            {api.endpoints.map(function(endpoint, index) {
-              return generateIndexRoute({ key: index, endpoint: endpoint });
+            {api.indices.map(function(endpointIndex, index) {
+              return generateIndexRoute({ key: index, endpointIndex: endpointIndex });
             })}
-            {api.endpoints.map(function(endpoint) {
-              const crumb = [{ groupLabel: 'Reference', label: endpoint.path, to: endpoint.routePath }];
-              return generateChildRoute({ endpoint: endpoint, prevCrumbs: crumb });
+            {api.indices.map(function(endpointIndex) {
+              const crumb = [{ groupLabel: 'Reference', label: endpointIndex.path, to: endpointIndex.routePath }];
+              return generateChildRoute({ endpointIndex: endpointIndex, prevCrumbs: crumb });
             })}
             {pythonClientObjectTitles.map(function(pythonObject, index) {
               const crumb = [{ groupLabel: 'Libraries', label: '/python', to: `/${API_VERSION}/libraries/python` }];

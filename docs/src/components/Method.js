@@ -45,9 +45,9 @@ export default function Method(props) {
   return (
     <div id={name} className="Method">
       <div className="Title">
-        <div className="Title-heading">
+        <div className="Title-heading clearfix">
           <h2>{name}</h2>
-          <div className="Descriptor">
+          <div className="float-sm-right">
             <div>
               {money ? <small className="text-muted"><i className="fa fa-dollar"></i> Will incur a charge on your account</small> : null}
             </div>
@@ -56,7 +56,7 @@ export default function Method(props) {
             </div>
           </div>
         </div>
-        <p>{description}</p>
+        {!description ? null : <p>{description}</p>}
       </div>
       {methodParams}
       {methodRequest}

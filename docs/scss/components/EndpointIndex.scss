@@ -4,9 +4,30 @@
     &-header,
     &-group {
         margin-bottom: 20px;
+        width: 100%;
+
+        h1, .GithubLink {
+            display: inline;
+        }
+
+        .GithubLink {
+            float: right;
+            padding: 10px 0;
+        }
     }
 
     &-breadcrumbsContainer {
         margin-bottom: 5px;
+    }
+
+    @media screen and (max-width: #{$table-breakpoint}) {
+        &-header,
+        &-group {
+            overflow-x: auto;
+        }
+
+        .LinkCell {
+            overflow-wrap: break-word;
+        }
     }
 }

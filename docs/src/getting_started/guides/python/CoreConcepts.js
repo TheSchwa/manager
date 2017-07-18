@@ -23,7 +23,7 @@ export default function CoreConcepts(props) {
       <section>
         <h2>Filtering</h2>
         <p>
-          All listing methods of the LinodeClient object can be "filtered," allowing you to query for only the objects you desire. Filtering uses a SQLAlchemy-inspired syntax. All attributes that are filterable are marked with a Filterable <i className="fa fa-filter"></i> icon below.
+          All listing methods of the LinodeClient object can be "filtered," allowing you to query for only the objects you desire. Filtering uses a SQLAlchemy-inspired syntax.
         </p>
         <Table
           columns={[
@@ -75,7 +75,7 @@ while not linode.state == 'running':
       <section>
         <h2>Updating and Deleting Objects</h2>
         <p>
-          All API resources are represented as objects, and all objects you own can be updated and deleted (an object you own would be a Linode or a DNS Zone, as opposed to a Datacenter or Service, which are accessible to you but cannot be modified or removed).
+          All API resources are represented as objects, and all objects you own can be updated and deleted (an object you own would be a Linode or a Domain, as opposed to a Datacenter or Service, which are accessible to you but cannot be modified or removed).
         </p>
         <p>
           Any attribute of any object that you can update will be marked Editable <i className="fa fa-pencil"></i>in the object reference below. These attributes can be assigned as normal, and updated in the server with a call to <code>save()</code>.
@@ -90,6 +90,7 @@ while not linode.state == 'running':
           While many API requests are paginated, all listing calls in the Python Library return <code>PaginatedLists</code> that handle loading additional pages seamlessly. While these lists are not intended to be long-lived (i.e. do not store a PaginatedList that you expect to change, as it will not update itself), it does allow easy iteration over all resources without having to worry about when a page transition occurs.
         </p>
       </section>
+      <div className="text-sm-center"><Link to={`/${API_VERSION}/libraries/python`}>Check out the Python Library objects &raquo;</Link></div>
     </section>
   );
 }

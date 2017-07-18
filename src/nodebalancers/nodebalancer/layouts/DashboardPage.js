@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
@@ -23,6 +24,9 @@ import {
 } from '~/constants';
 
 
+const CONNECTION_UNITS = [' connections', 'K connections', 'M connections'];
+const NETWORK_UNITS = [' bits', 'K bits', 'M bits'];
+
 function formatData(colors, datasets, legends) {
   const x = datasets[0].map(([x]) => x);
   const ys = datasets.map(dataset => dataset.map(([, y]) => y));
@@ -43,37 +47,16 @@ export class DashboardPage extends Component {
   constructor(props) {
     super(props);
 
-    const stats = props.nodebalancer._stats;
-    if (stats) {
-      this.graphs = {
-        connections: {
-          title: 'Connections',
-          yAxis: {
-            label: 'Connections per second',
-            format: p => p.toFixed(1),
-          },
-          data: formatData(['990066'], [stats.connections]),
-          unit: ' connections',
-        },
-        traffic: {
-          title: 'Traffic',
-          yAxis: {
-            label: 'Bits per second',
-            format: r => `${r.toFixed(1)} bits/s`,
-          },
-          data: formatData(['0033CC', '32CD32'],
-                           [stats.traffic.in, stats.traffic.out],
-                           ['In', 'Out']),
-          unit: ' bits/s',
-        },
-      };
-    }
-
     this.state = {
       source: 'connections',
-      errors: {},
-      saving: false,
+      units: 0,
     };
+
+    this.componentWillReceiveProps = this.componentWillMount;
+  }
+
+  componentWillMount() {
+
   }
 
   async componentDidMount() {
@@ -81,12 +64,18 @@ export class DashboardPage extends Component {
     dispatch(setSource(__filename));
   }
 
+  shouldComponentUpdate(newProps, newState) {
+    // Prevents graph animation from happening multiple times for unchanged data.
+    return !_.isEqual(this.props, newProps) || !_.isEqual(this.state, newState);
+  }
+
   onChange = ({ target: { name, value } }) => this.setState({ [name]: value })
 
   deleteNodeBalancerConfig(nodebalancer, config) {
     const { dispatch } = this.props;
+    const title = 'Delete NodeBalancer Config';
 
-    dispatch(showModal('Delete NodeBalancer Config',
+    dispatch(showModal(title,
       <DeleteModalBody
         onOk={() => {
           const ids = [nodebalancer.id, config.id].filter(Boolean);
@@ -96,14 +85,90 @@ export class DashboardPage extends Component {
             hideModal,
           ]));
         }}
+        typeOfItem={title}
         onCancel={() => dispatch(hideModal())}
         items={[`port ${config.port}`]}
       />
     ));
   }
 
+  renderUnitSelect() {
+    const { units, source } = this.state;
+
+    const _units = source === 'connections' ? CONNECTION_UNITS : NETWORK_UNITS;
+
+    return (
+      <div className="Menu-item">
+        <label className="row-label">Units:</label>
+        <Select
+          value={units}
+          name="units"
+          onChange={this.onChange}
+          options={_units.map((label, value) => ({ label, value }))}
+        />
+      </div>
+    );
+  }
+
+  renderGraphs() {
+    const { timezone, nodebalancer: { _stats: stats } } = this.props;
+    const { units } = this.state;
+
+    if (stats) {
+      this.graphs = {
+        connections: {
+          title: 'Connections',
+          yAxis: {
+            label: `${CONNECTION_UNITS[units]} per second`,
+            format: r => `${r.toFixed(1) / Math.pow(1000, units)}${CONNECTION_UNITS[units]}/s`,
+          },
+          data: formatData(['990066'], [stats.connections]),
+          unit: `${CONNECTION_UNITS[units]}/s`,
+        },
+        traffic: {
+          title: 'Traffic',
+          yAxis: {
+            label: `${NETWORK_UNITS[units]} per second`,
+            format: r => `${r.toFixed(1) / Math.pow(1000, units)}${NETWORK_UNITS[units]}/s`,
+          },
+          data: formatData(['0033CC', '32CD32'],
+                           [stats.traffic.in, stats.traffic.out],
+                           ['In', 'Out']),
+          unit: `${NETWORK_UNITS[units]}/s`,
+        },
+      };
+    }
+
+    return (
+      <Card header={<CardHeader title="Graphs" />}>
+        {!this.graphs ? <p>No graphs are available.</p> : (
+          <div>
+            <div className="Menu">
+              <div className="Menu-item">
+                <Select
+                  value={this.state.source}
+                  name="source"
+                  onChange={this.onChange}
+                >
+                  <option value="connections">Connections</option>
+                  <option value="traffic">Traffic</option>
+                </Select>
+              </div>
+              {this.renderUnitSelect()}
+              <div className="Menu-item Menu-item--right">Last 24 Hours</div>
+            </div>
+            <LineGraph
+              timezone={timezone}
+              {...this.graphs[this.state.source]}
+            />
+          </div>
+        )}
+      </Card>
+    );
+  }
+
   render() {
-    const { nodebalancer, timezone } = this.props;
+    const { nodebalancer } = this.props;
     const { configs } = nodebalancer._configs;
 
     const newConfigs = Object.values(configs).map((config) => {
@@ -196,31 +261,7 @@ export class DashboardPage extends Component {
             </List>
           </Card>
         </section>
-        <Card header={<CardHeader title="Graphs" />}>
-          {!this.graphs ? <p>No graphs are available.</p> : (
-            <div>
-              <div className="clearfix">
-                <div className="float-sm-left">
-                  <Select
-                    value={this.state.source}
-                    name="source"
-                    onChange={this.onChange}
-                  >
-                    <option value="connections">Connections</option>
-                    <option value="traffic">Traffic</option>
-                  </Select>
-                </div>
-                <div className="float-sm-right">
-                  Last 24 hours
-                </div>
-              </div>
-              <LineGraph
-                timezone={timezone}
-                {...this.graphs[this.state.source]}
-              />
-            </div>
-          )}
-        </Card>
+        {this.renderGraphs()}
       </div>
     );
   }
